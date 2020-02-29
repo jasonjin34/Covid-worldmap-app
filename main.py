@@ -65,6 +65,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         #QDialog of detail Virus information
         dlg = Dialog()
         #get the city data
+        if closecity not in virusdatadict:
+            return
         citydata = virusdatadict[closecity]
         dlg.setData(closecity, citydata)
         dlg.exec_()        
