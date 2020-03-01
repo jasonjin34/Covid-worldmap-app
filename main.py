@@ -57,11 +57,11 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     def mousePressEvent(self, e):
         #get country location
         locationdict = country_location()
-        if not self.time:
-            return
-        virusdatadict = current_data(self.time)
+        virusdatadict, _, _, _= current_data(self.time)
         currloca = (e.x(), e.y())
-        closecity = cloest_city(locationdict, currloca)
+        closecity = cloest_city(locationdict, currloca, self.time, virusdatadict)
+        if not closecity:
+            return
         #QDialog of detail Virus information
         dlg = Dialog()
         #get the city data
@@ -73,13 +73,23 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
     def refresh(self):
         temp = self.dateEdit.date().toString("MM-dd-yyyy")
-        imgcv = edit_map(temp)
+        if temp == '02-10-2020':
+            return
+        imgcv, totalconfirm, totaldeath, totalrecover = edit_map(temp)
         self.time = temp
-
         height, width, channel = imgcv.shape
         bytesPerLine = 3 * width
         qImg = QImage(imgcv.data, width, height, bytesPerLine, QImage.Format_BGR888)
         self.maplabel.setPixmap(QPixmap.fromImage(qImg))
+
+        #get the total data
+        self.confirmLineEdit.setText(str(totalconfirm))
+        self.deathLineEdit.setText(str(totaldeath))
+        self.recoverLineEdit.setText(str(totalrecover))
+
+        self.confirmLineEdit.setAlignment(PyQt5.QtCore.Qt.AlignCenter)
+        self.deathLineEdit.setAlignment(PyQt5.QtCore.Qt.AlignCenter)
+        self.recoverLineEdit.setAlignment(PyQt5.QtCore.Qt.AlignCenter)
 
 app = QtWidgets.QApplication(sys.argv)
 

@@ -11,17 +11,21 @@ def current_data(time):
     dataurl = dataurl + str(time) + '.csv'
 
     datadict = {}
+    totalconfirm, totaldeath, totalrecover = 0, 0, 0    
     with requests.get(dataurl, stream=True) as r:
         lines = (line.decode('utf-8') for line in r.iter_lines())
         csvreader = csv.reader(lines)
         next(csvreader)
         for row in csvreader:
             country = row[1]
+            totalconfirm += int(row[3])
+            totaldeath += int(row[4])
+            totalrecover += int(row[5])
             if country not in datadict:
                 datadict[country] = [int(val) for val in row[3:]]
             else:
                 datadict[country] = [val1 + int(val2) for val1, val2 in zip(datadict[country],row[3:])]
-    return datadict
+    return datadict,totalconfirm, totaldeath, totalrecover
 
 def country_location():
     geocountrydict = {}
@@ -39,17 +43,14 @@ def gps_coord_trans(gps_tuple, R):
     latitude = gps_tuple[1] /180.0 * math.pi
     y = 256.0 - R * longtitude 
     x = 512.0 + R * latitude 
-    return int(x), int(y)
+    return x, y
 
 def calc_distance(pos1, pos2):
     deltax = pos1[0] - pos2[0]
     deltay = pos1[1] - pos2[1]
     return math.sqrt(deltax**2 + deltay**2)
 
-def cloest_city(datadict, currloca):
-    time = date.today() - timedelta(days=1)
-    time = time.strftime("%m-%d-%Y")
-    viruscountry = current_data(time)
+def cloest_city(datadict, currloca, time, viruscountry):
     cloest_city = ''
     shortest_distance = 10000
     R = 162.9
@@ -61,36 +62,35 @@ def cloest_city(datadict, currloca):
         if temp_distance < shortest_distance:
             shortest_distance = temp_distance 
             cloest_city = v
-    return cloest_city
-        
+    if shortest_distance < 200:
+        return cloest_city
+    else:
+        return 
 
 def edit_map(time):
     img = worldmap()
     origin_img = img.copy()
     Radius = 162.9
     locationdata = country_location()
-    virusdata = current_data(time)
+    virusdata,totalconfirm, totaldeath, totalrecover = current_data(time)
 
     for k, v in virusdata.items():
         country = k
         if not v[0] or country not in locationdata:
             continue
-        numberinfect = int((math.log10(v[0]))**2 + 5)
+        numberinfect = int(math.log(v[0], 2)) * 2
         latituelongtitue = locationdata[country]
         x_coord, y_coord = gps_coord_trans(latituelongtitue, Radius)
-        img = cv2.circle(img, (x_coord, y_coord), numberinfect, (0,0,255), -1)
+        img = cv2.circle(img, (int(x_coord), int(y_coord)), numberinfect, (0,0,255), -1)
 
     alpha = 0.4  # Transparency factor.
 
     # Following line overlays transparent rectangle over the image
     combined_image = cv2.addWeighted(img, alpha, origin_img, 1 - alpha, 0)
 
-    return combined_image
+    return combined_image, totalconfirm, totaldeath, totalrecover
 
 def worldmap():
     path = './map.png'
     img = cv2.imread(path, cv2.IMREAD_UNCHANGED) 
     return img
-
-
-
