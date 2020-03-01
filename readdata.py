@@ -27,6 +27,24 @@ def current_data(time):
                 datadict[country] = [val1 + int(val2) for val1, val2 in zip(datadict[country],row[3:])]
     return datadict,totalconfirm, totaldeath, totalrecover
 
+def time_series_data(input):
+    timeseriesdataurl = 'https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_19-covid-'
+    timeseriesdataurl = timeseriesdataurl + str(input) + '.csv'
+    timeseriedatadict = {}
+    with requests.get(timeseriesdataurl, stream=True) as r:
+        lines = (line.decode('utf-8') for line in r.iter_lines())
+        csvreader = csv.reader(lines)
+        header = next(csvreader)
+        #read data
+        for row in csvreader:
+            country = row[1]
+            temptimedata = [int(element) for element in row[4:]]
+            if country not in timeseriedatadict:
+                timeseriedatadict[country] = temptimedata
+            else:
+                timeseriedatadict[country] = [val1+val2 for val1, val2 in zip(timeseriedatadict[country], temptimedata)]
+    return timeseriedatadict 
+    
 def country_location():
     geocountrydict = {}
     with open("geocountry.txt", encoding='utf-8') as f:
@@ -66,7 +84,7 @@ def cloest_city(datadict, currloca, time, viruscountry):
         return cloest_city
     else:
         return 
-
+pass
 def edit_map(time):
     img = worldmap()
     origin_img = img.copy()
@@ -94,3 +112,7 @@ def worldmap():
     path = './map.png'
     img = cv2.imread(path, cv2.IMREAD_UNCHANGED) 
     return img
+
+if __name__ == "__main__":
+    time_series_data()
+    

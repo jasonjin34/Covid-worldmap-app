@@ -1,11 +1,16 @@
 import sys
 import cv2 as cv
+
 import PyQt5
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5 import QtCore, QtGui, QtWidgets, QtWidgets, uic
 from PyQt5.QtGui import QImage, QPixmap
-from PyQt5.QtWidgets import QDialog
+from PyQt5.QtWidgets import QDialog, QGraphicsScene, QGraphicsView
 from PyQt5.QtCore import QObject, pyqtSignal
-from readdata import current_data, country_location, gps_coord_trans, edit_map, worldmap, cloest_city
+from pyqtgraph import PlotWidget, plot
+import pyqtgraph as pg 
+
+from readdata import current_data, country_location, gps_coord_trans, edit_map, worldmap, cloest_city, time_series_data
+
 from MainWindow import Ui_MainWindow
 from Dialog import Ui_Dialog
 
@@ -21,6 +26,8 @@ class Dialog(QtWidgets.QDialog, Ui_Dialog):
         super(Dialog, self).__init__(*args, **kwargs)
         self.setupUi(self)
         self.setWindowTitle('Detail Convid-19')
+        self.scene = pg.PlotWidget()        
+        self.plotbotton.pressed.connect(self.plot_series_data)
     
     def setData(self, location, data):
         #get the city number of confirmed, death and recover cases 
@@ -33,6 +40,37 @@ class Dialog(QtWidgets.QDialog, Ui_Dialog):
         self.DeathslineEdit.setAlignment(PyQt5.QtCore.Qt.AlignCenter)
         self.RecoveredlineEdit.setText(data[2])
         self.RecoveredlineEdit.setAlignment(PyQt5.QtCore.Qt.AlignCenter)
+        self.location = location
+    
+    def plot_series_data(self):
+        #read the time serise data 
+        location = self.location
+        timeseriesdictconfirmed = time_series_data('Confirmed')
+        timeseriesdictdeaths = time_series_data('Deaths')
+        timeseriesdictrecover = time_series_data('Recovered')
+
+        timedataconfirmed = timeseriesdictconfirmed[location]
+        timedatadeaths = timeseriesdictdeaths[location]
+        timedatarecover = timeseriesdictrecover[location]
+        length = len(timedataconfirmed)
+        data = [x for x in range(length)] 
+
+
+        self.scene.setBackground('w')
+        self.scene.setTitle("Covid-19")
+        self.scene.setLabel('left', 'Confirmed Cases', color=(0,0,0), size=10)
+        self.scene.setLabel('bottom', 'date', color=(0,0,0), size=10)
+        self.scene.addLegend()
+        self.scene.showGrid(x=False, y=True)
+
+        pen1 = pg.mkPen(color=(255, 165, 000), width=2)
+        pen2 = pg.mkPen(color=(000, 000, 000), width=2)
+        pen3 = pg.mkPen(color=(50, 205, 50), width=2)
+
+        self.scene.plot(data, timedataconfirmed, name='Confirmed', pen=pen1, symbol='o', symbolSize=4)
+        self.scene.plot(data, timedatadeaths, name='Death', pen=pen2, symbol='x', symbolSize=4)
+        self.scene.plot(data, timedatarecover, name='Recover', pen=pen3, symbol='+', symbolSize=4)
+        self.scene.show()
 
 class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     def __init__(self, *args, obj=None, **kwargs):
@@ -91,8 +129,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.deathLineEdit.setAlignment(PyQt5.QtCore.Qt.AlignCenter)
         self.recoverLineEdit.setAlignment(PyQt5.QtCore.Qt.AlignCenter)
 
-app = QtWidgets.QApplication(sys.argv)
-
-window = MainWindow()
-window.show()
-app.exec()
+if __name__ == "__main__":
+    app = QtWidgets.QApplication(sys.argv)
+    window = MainWindow()
+    window.show()
+    app.exec()
