@@ -22,9 +22,9 @@ def current_data(time):
             totaldeath += int(row[4])
             totalrecover += int(row[5])
             if country not in datadict:
-                datadict[country] = [int(val) for val in row[3:]]
+                datadict[country] = [int(val) for val in row[3:6]]
             else:
-                datadict[country] = [val1 + int(val2) for val1, val2 in zip(datadict[country],row[3:])]
+                datadict[country] = [val1 + int(val2) for val1, val2 in zip(datadict[country],row[3:6])]
     return datadict,totalconfirm, totaldeath, totalrecover
 
 def time_series_data(input):
