@@ -4,12 +4,12 @@ import cv2 as cv
 import PyQt5
 from PyQt5 import QtCore, QtGui, QtWidgets, QtWidgets, uic
 from PyQt5.QtGui import QImage, QPixmap
-from PyQt5.QtWidgets import QDialog, QGraphicsScene, QGraphicsView
+from PyQt5.QtWidgets import QDialog, QGraphicsScene, QGraphicsView, QCompleter
 from PyQt5.QtCore import QObject, pyqtSignal
 from pyqtgraph import PlotWidget, plot
 import pyqtgraph as pg 
 
-from readdata import current_data, country_location, gps_coord_trans, edit_map, worldmap, cloest_city, time_series_data, gps_coord_reverse_trans
+from readdata import current_data, country_location, gps_coord_trans, edit_map, worldmap, cloest_city, time_series_data, gps_coord_reverse_trans, date_data_for_checkbox
 
 from MainWindow import Ui_MainWindow
 from Dialog import Ui_Dialog
@@ -113,15 +113,27 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         qImg = QImage(imgcv.data, width, height, bytesPerLine, QImage.Format_BGR888)
         self.maplabel.setPixmap(QPixmap.fromImage(qImg))
 
-        #set dateEdit 
-        self.dateEdit.setDateTime(QtCore.QDateTime.currentDateTime())
-        self.dateEdit.dateChanged.connect(self.refresh)
-
         #reload data
         self.locationdict = country_location()
 
         #tracking mouse in map label
         self.maplabel.setMouseTracking(True)
+
+        #set date lineedit
+        self.datadate = date_data_for_checkbox()
+        self.datelineEdit.setPlaceholderText('select data')
+
+        #set date horizontal bar
+        self.datehorizontalScrollBar.setMinimum(0)
+        self.datehorizontalScrollBar.setMaximum(len(self.datadate)-1)
+        self.datehorizontalScrollBar.valueChanged.connect(self.settime)
+    
+    def settime(self):
+        self.time = self.datadate[self.datehorizontalScrollBar.value()]
+        self.datelineEdit.setText(self.time)
+        if self.time == '02-10-2020':
+            return
+        self.map_refresh()
     
     def mouseMoveEvent(self, e):
         #get country location
@@ -158,10 +170,9 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         log, lat = gps_coord_reverse_trans(e.x(), e.y()) 
         print('longtitue: {}, latitute: {}'.format(log, lat))
 
-    def refresh(self):
-        temp = self.dateEdit.date().toString("MM-dd-yyyy")
-        if temp == '02-10-2020':
-            return
+    def map_refresh(self):
+        #temp = self.datelineEdit.text()
+        temp = self.time
         imgcv, totalconfirm, totaldeath, totalrecover = edit_map(temp)
         self.time = temp
         height, width, channel = imgcv.shape

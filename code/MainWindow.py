@@ -2,13 +2,11 @@
 
 # Form implementation generated from reading ui file 'MainWindow.ui'
 #
-# Created by: PyQt5 UI code generator 5.14.1
+# Created by: PyQt5 UI code generator 5.10.1
 #
 # WARNING! All changes made in this file will be lost!
 
-
 from PyQt5 import QtCore, QtGui, QtWidgets
-
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -73,28 +71,25 @@ class Ui_MainWindow(object):
         self.horizontalLayout_3.addWidget(self.recoverLineEdit)
         self.verticalLayout.addLayout(self.horizontalLayout_3)
         self.horizontalLayout_5.addLayout(self.verticalLayout)
-        self.verticalLayout_2 = QtWidgets.QVBoxLayout()
-        self.verticalLayout_2.setObjectName("verticalLayout_2")
-        spacerItem1 = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
-        self.verticalLayout_2.addItem(spacerItem1)
-        self.horizontalLayout_4 = QtWidgets.QHBoxLayout()
-        self.horizontalLayout_4.setObjectName("horizontalLayout_4")
         self.label = QtWidgets.QLabel(self.centralwidget)
         self.label.setObjectName("label")
-        self.horizontalLayout_4.addWidget(self.label)
-        self.dateEdit = QtWidgets.QDateEdit(self.centralwidget)
-        self.dateEdit.setObjectName("dateEdit")
-        self.horizontalLayout_4.addWidget(self.dateEdit)
-        self.verticalLayout_2.addLayout(self.horizontalLayout_4)
-        spacerItem2 = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
-        self.verticalLayout_2.addItem(spacerItem2)
-        self.horizontalLayout_5.addLayout(self.verticalLayout_2)
-        spacerItem3 = QtWidgets.QSpacerItem(218, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
-        self.horizontalLayout_5.addItem(spacerItem3)
+        self.horizontalLayout_5.addWidget(self.label)
+        self.datelineEdit = QtWidgets.QLineEdit(self.centralwidget)
+        self.datelineEdit.setMinimumSize(QtCore.QSize(160, 0))
+        self.datelineEdit.setMaximumSize(QtCore.QSize(16, 16777215))
+        self.datelineEdit.setAlignment(QtCore.Qt.AlignCenter)
+        self.datelineEdit.setObjectName("datelineEdit")
+        self.horizontalLayout_5.addWidget(self.datelineEdit)
+        self.datehorizontalScrollBar = QtWidgets.QScrollBar(self.centralwidget)
+        self.datehorizontalScrollBar.setMinimumSize(QtCore.QSize(100, 0))
+        self.datehorizontalScrollBar.setOrientation(QtCore.Qt.Horizontal)
+        self.datehorizontalScrollBar.setObjectName("datehorizontalScrollBar")
+        self.horizontalLayout_5.addWidget(self.datehorizontalScrollBar)
+        spacerItem1 = QtWidgets.QSpacerItem(218, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+        self.horizontalLayout_5.addItem(spacerItem1)
         self.horizontalLayout_5.setStretch(1, 4)
         self.horizontalLayout_5.setStretch(2, 1)
-        self.horizontalLayout_5.setStretch(3, 1)
-        self.horizontalLayout_5.setStretch(4, 4)
+        self.horizontalLayout_5.setStretch(6, 4)
         self.verticalLayout_3.addLayout(self.horizontalLayout_5)
         self.verticalLayout_4.addLayout(self.verticalLayout_3)
         MainWindow.setCentralWidget(self.centralwidget)
@@ -118,3 +113,4 @@ class Ui_MainWindow(object):
         self.label_3.setText(_translate("MainWindow", "Deaths"))
         self.label_4.setText(_translate("MainWindow", "Recovered"))
         self.label.setText(_translate("MainWindow", "Date"))
+

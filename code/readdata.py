@@ -17,6 +17,9 @@ def current_data(time):
         csvreader = csv.reader(lines)
         next(csvreader)
         for row in csvreader:
+            row = [e if e else '0' for e in row]
+            if not row:
+                return
             country = row[1]
             totalconfirm += int(row[3])
             totaldeath += int(row[4])
@@ -26,6 +29,24 @@ def current_data(time):
             else:
                 datadict[country] = [val1 + int(val2) for val1, val2 in zip(datadict[country],row[3:6])]
     return datadict,totalconfirm, totaldeath, totalrecover
+
+def date_data_for_checkbox():
+    timeseriesdataurl = 'https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_19-covid-Confirmed.csv'
+    r = requests.get(timeseriesdataurl, stream=True)
+    r = (line.decode('utf-8') for line in r.iter_lines())
+    header = next(csv.reader(r))
+    output = []
+    for data in header[4:]:
+        templist = data.split('/')
+        month = templist[0]
+        if len(month) == 1:
+            month = '0' + month
+        day = templist[1]
+        if len(day) == 1:
+            day = '0' + day
+        year = templist[2] + '20'
+        output.append('{}-{}-{}'.format(month, day, year))
+    return output
 
 def time_series_data(input):
     timeseriesdataurl = 'https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_19-covid-'
@@ -101,6 +122,7 @@ def edit_map(time):
     Radius = 162.9
     locationdata = country_location()
     virusdata,totalconfirm, totaldeath, totalrecover = current_data(time)
+    print(time)
 
     for k, v in virusdata.items():
         country = k
@@ -132,3 +154,7 @@ def worldmap():
     path = './map.png'
     img = cv2.imread(path, cv2.IMREAD_UNCHANGED) 
     return img
+
+if __name__ == "__main__":
+    date_data_for_checkbox()
+    
