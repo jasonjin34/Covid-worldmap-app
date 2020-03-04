@@ -35,15 +35,18 @@ def time_series_data(input):
         lines = (line.decode('utf-8') for line in r.iter_lines())
         csvreader = csv.reader(lines)
         header = next(csvreader)
+        header = [date[:-3] for date in header[4:]]
         #read data
         for row in csvreader:
+            if not row:
+                continue
             country = row[1]
-            temptimedata = [int(element) for element in row[4:]]
+            temptimedata = [int(element) if element else 0 for element in row[4:]]
             if country not in timeseriedatadict:
                 timeseriedatadict[country] = temptimedata
             else:
                 timeseriedatadict[country] = [val1+val2 for val1, val2 in zip(timeseriedatadict[country], temptimedata)]
-    return timeseriedatadict 
+    return timeseriedatadict, header 
     
 def country_location():
     geocountrydict = {}
@@ -63,6 +66,13 @@ def gps_coord_trans(gps_tuple, R):
     x = 512.0 + R * latitude 
     return x, y
 
+def gps_coord_reverse_trans(x, y):
+    longtitude = - (y - 256) / 162.9
+    latitude = (x - 512) / 162.9
+    longtitude = longtitude / math.pi * 180.0
+    latitude = latitude / math.pi * 180.0
+    return longtitude, latitude
+
 def calc_distance(pos1, pos2):
     deltax = pos1[0] - pos2[0]
     deltay = pos1[1] - pos2[1]
@@ -80,7 +90,7 @@ def cloest_city(datadict, currloca, time, viruscountry):
         if temp_distance < shortest_distance:
             shortest_distance = temp_distance 
             cloest_city = v
-    if shortest_distance < 200:
+    if shortest_distance < 50:
         return cloest_city
     else:
         return 
@@ -96,10 +106,20 @@ def edit_map(time):
         country = k
         if not v[0] or country not in locationdata:
             continue
-        numberinfect = int(math.log(v[0], 2)) * 2
+        radius = int(math.log2(v[0])) * 2
         latituelongtitue = locationdata[country]
         x_coord, y_coord = gps_coord_trans(latituelongtitue, Radius)
-        img = cv2.circle(img, (int(x_coord), int(y_coord)), numberinfect, (0,0,255), -1)
+
+        if v[0] >= 10000:
+            color = 0
+        elif v[0] < 10000 and v[0] > 1000:
+            color = 80
+        elif v[0] < 1000 and v[0] > 100:
+            color = 160
+        elif v[0] < 100:
+            color = 255
+        
+        img = cv2.circle(img, (int(x_coord), int(y_coord)), radius, (0,0,color), -1)
 
     alpha = 0.4  # Transparency factor.
 
@@ -112,7 +132,3 @@ def worldmap():
     path = './map.png'
     img = cv2.imread(path, cv2.IMREAD_UNCHANGED) 
     return img
-
-if __name__ == "__main__":
-    time_series_data()
-    

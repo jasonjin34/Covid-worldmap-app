@@ -9,16 +9,10 @@ from PyQt5.QtCore import QObject, pyqtSignal
 from pyqtgraph import PlotWidget, plot
 import pyqtgraph as pg 
 
-from readdata import current_data, country_location, gps_coord_trans, edit_map, worldmap, cloest_city, time_series_data
+from readdata import current_data, country_location, gps_coord_trans, edit_map, worldmap, cloest_city, time_series_data, gps_coord_reverse_trans
 
 from MainWindow import Ui_MainWindow
 from Dialog import Ui_Dialog
-
-class message(QObject):
-    message = pyqtSignal(tuple)
-    def __init__(self):
-        super().__init__()
-        self.value = ()
 
 
 class Dialog(QtWidgets.QDialog, Ui_Dialog):
@@ -26,9 +20,46 @@ class Dialog(QtWidgets.QDialog, Ui_Dialog):
         super(Dialog, self).__init__(*args, **kwargs)
         self.setupUi(self)
         self.setWindowTitle('Detail Convid-19')
-        self.scene = pg.PlotWidget()        
+
+        #signal slot connection
         self.plotbotton.pressed.connect(self.plot_series_data)
-    
+        self.recovercheckBox.stateChanged.connect(self.plot_series_data)
+        self.deathcheckBox.stateChanged.connect(self.plot_series_data)
+
+        #set up for ploting
+        self.plotwidget.setBackground('w')
+        self.plotwidget.setTitle("Covid-19")
+        self.plotwidget.setLabel('left', 'Confirmed Cases', color=(0,0,0), size=10)
+        self.plotwidget.setLabel('bottom', 'past date', color=(0,0,0), size=10)
+        self.plotwidget.showGrid(x=False, y=True)
+
+        #set up pen
+        self.pen1 = pg.mkPen(color=(255, 165, 000), width=2)
+        self.pen2 = pg.mkPen(color=(000, 000, 000), width=2)
+        self.pen3 = pg.mkPen(color=(50, 205, 50), width=2)
+        
+        #set up lengend
+        self.plotwidget.addLegend()
+        style = pg.PlotDataItem(pen=self.pen1)
+        self.plotwidget.plotItem.legend.addItem(style, 'Confirm')
+        style = pg.PlotDataItem(pen=self.pen2)
+        self.plotwidget.plotItem.legend.addItem(style, 'Deaths')
+        style = pg.PlotDataItem(pen=self.pen3)
+        self.plotwidget.plotItem.legend.addItem(style, 'Reovered')
+
+        self.xax = self.plotwidget.getAxis('bottom')
+
+        self.xax = self.plotwidget.getAxis('bottom')
+        #read the time serise data 
+        self.timeseriesdictconfirmed, self.dateheader = time_series_data('Confirmed')
+        self.timeseriesdictdeaths, _ = time_series_data('Deaths')
+        self.timeseriesdictrecover, _ = time_series_data('Recovered')
+        length = len(self.dateheader)
+        self.data = [x for x in range(length)]
+        ticket = [list(zip(self.data[::4], self.dateheader[::4]))]
+        self.xax.setTicks(ticket)
+
+   
     def setData(self, location, data):
         #get the city number of confirmed, death and recover cases 
         self.countrylineEdit.setText(location)
@@ -43,42 +74,36 @@ class Dialog(QtWidgets.QDialog, Ui_Dialog):
         self.location = location
     
     def plot_series_data(self):
-        #read the time serise data 
+        self.plotwidget.clear()
+
+        data = self.data
         location = self.location
-        timeseriesdictconfirmed = time_series_data('Confirmed')
-        timeseriesdictdeaths = time_series_data('Deaths')
-        timeseriesdictrecover = time_series_data('Recovered')
 
-        timedataconfirmed = timeseriesdictconfirmed[location]
-        timedatadeaths = timeseriesdictdeaths[location]
-        timedatarecover = timeseriesdictrecover[location]
-        length = len(timedataconfirmed)
-        data = [x for x in range(length)] 
+        #plot cases difference
+        recoverstate, deathstate = self.recovercheckBox.isChecked(), self.deathcheckBox.isChecked() 
+        if not recoverstate and not deathstate:
+            timedataconfirmed = self.timeseriesdictconfirmed[location]
+            self.plotwidget.plot(data, timedataconfirmed, pen=self.pen1, symbol='o', symbolSize=4)
+            timedatadeaths = self.timeseriesdictdeaths[location]
+            self.plotwidget.plot(data, timedatadeaths, pen=self.pen2, symbol='x', symbolSize=4)
+            timedatarecover = self.timeseriesdictrecover[location]
+            self.plotwidget.plot(data, timedatarecover, pen=self.pen3, symbol='+', symbolSize=4)        
 
+        if deathstate:
+            timedatadeaths = self.timeseriesdictdeaths[location]
+            self.plotwidget.plot(data, timedatadeaths, pen=self.pen2, symbol='x', symbolSize=4)
+            
+        if recoverstate: 
+            timedatarecover = self.timeseriesdictrecover[location]
+            self.plotwidget.plot(data, timedatarecover, pen=self.pen3, symbol='+', symbolSize=4)        
 
-        self.scene.setBackground('w')
-        self.scene.setTitle("Covid-19")
-        self.scene.setLabel('left', 'Confirmed Cases', color=(0,0,0), size=10)
-        self.scene.setLabel('bottom', 'date', color=(0,0,0), size=10)
-        self.scene.addLegend()
-        self.scene.showGrid(x=False, y=True)
-
-        pen1 = pg.mkPen(color=(255, 165, 000), width=2)
-        pen2 = pg.mkPen(color=(000, 000, 000), width=2)
-        pen3 = pg.mkPen(color=(50, 205, 50), width=2)
-
-        self.scene.plot(data, timedataconfirmed, name='Confirmed', pen=pen1, symbol='o', symbolSize=4)
-        self.scene.plot(data, timedatadeaths, name='Death', pen=pen2, symbol='x', symbolSize=4)
-        self.scene.plot(data, timedatarecover, name='Recover', pen=pen3, symbol='+', symbolSize=4)
-        self.scene.show()
+        self.plotwidget.show()
 
 class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     def __init__(self, *args, obj=None, **kwargs):
         super(MainWindow, self).__init__(*args, **kwargs)
         self.setupUi(self)
         self.time = None
-        #set mouse traning
-        self.setMouseTracking(True)
         self.setWindowTitle("Coronavirus map: how Covid-19 is spreading across the world")
 
         #set up the origin image
@@ -92,12 +117,34 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.dateEdit.setDateTime(QtCore.QDateTime.currentDateTime())
         self.dateEdit.dateChanged.connect(self.refresh)
 
+        #reload data
+        self.locationdict = country_location()
+
+        #tracking mouse in map label
+        self.maplabel.setMouseTracking(True)
+    
+    def mouseMoveEvent(self, e):
+        #get country location
+        virusdatadict, _, _, _= current_data(self.time)
+        currloca = (e.x() - 10, e.y() - 10)
+        closecity = cloest_city(self.locationdict, currloca, self.time, virusdatadict)
+        if not closecity:
+            self.mouseCountry.setText('Country') 
+            return
+        #QDialog of detail Virus information
+        dlg = Dialog()
+        #get the city data
+        if closecity not in virusdatadict:
+            self.mouseCountry.setText('Country')
+            return
+        self.mouseCountry.setText(closecity)
+
+
     def mousePressEvent(self, e):
         #get country location
-        locationdict = country_location()
         virusdatadict, _, _, _= current_data(self.time)
-        currloca = (e.x(), e.y())
-        closecity = cloest_city(locationdict, currloca, self.time, virusdatadict)
+        currloca = (e.x() - 10, e.y() - 10)
+        closecity = cloest_city(self.locationdict, currloca, self.time, virusdatadict)
         if not closecity:
             return
         #QDialog of detail Virus information
@@ -108,6 +155,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         citydata = virusdatadict[closecity]
         dlg.setData(closecity, citydata)
         dlg.exec_()        
+        log, lat = gps_coord_reverse_trans(e.x(), e.y()) 
+        print('longtitue: {}, latitute: {}'.format(log, lat))
 
     def refresh(self):
         temp = self.dateEdit.date().toString("MM-dd-yyyy")

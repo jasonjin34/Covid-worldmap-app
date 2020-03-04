@@ -11,7 +11,7 @@
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal",
-            "pythonPath": "~/venv/pyqt_env/bin/python3.6"
+            "pythonPath": "/home/jason/venv/pyqt_env/bin/python3.6"
         }
     ]
 }
