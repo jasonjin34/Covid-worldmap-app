@@ -1,0 +1,9 @@
+Covid World Spreading Map App
+
+size: 340 Mb
+usage: 1. go to the covid19map_app
+       2. make the app executable: chmod +x covid19\ map
+       3. run the app ./covid19\ map 
+os: Ubuntu 18.04.4 LTS
+
+
