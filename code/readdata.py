@@ -4,6 +4,7 @@ from datetime import date, timedelta
 import math
 import cv2
 import os
+import matplotlib.pyplot as plt
 
 def current_data(time):
 
@@ -155,6 +156,60 @@ def worldmap():
     img = cv2.imread(path, cv2.IMREAD_UNCHANGED) 
     return img
 
+def plottimeserisedata():
+    plt.figure(figsize=(20,10))
+    confirmdata, header= time_series_data('Confirmed')
+    korea = confirmdata['South Korea']
+    italy = confirmdata['Italy']
+    germany = confirmdata['Germany']
+    spain = confirmdata['Spain']
+    france = confirmdata['France']
+    
+    #slope
+    koreabefore = korea[-17:-1]
+    koreaafter = korea[-16:]
+    italybefore = italy[-17:-1]
+    italyafter = italy[-16:]
+    spainbefore = spain[-17:-1]
+    spainafter = spain[-16:]
+    francebefore = france[-17:-1]
+    franceafter = france[-16:]
+    germanybefore = germany[-17:-1]
+    spainafter = spain[-16:]
+    germanybefore = germany[-17:-1]
+    germanyafter = germany[-16:]
+
+    slopkorea = [after - before for after, before in zip(koreaafter, koreabefore)]
+    slopitaly = [after - before for after, before in zip(italyafter, italybefore)]
+    slopgermany = [after - before for after, before in zip(germanyafter, germanybefore)]
+    slopspain = [after - before for after, before in zip(spainafter, spainbefore)]
+    slopfrance = [after - before for after, before in zip(franceafter, francebefore)]
+    slopheader = header[-16:]
+
+    ax1 = plt.subplot(121)
+    ax1.plot(slopheader, slopkorea, label='Korea Growth Rate')
+    ax1.plot(slopheader, slopitaly, label='Italy Growth Rate')
+    ax1.plot(slopheader, slopgermany, label='Germany Growth Rate')
+    ax1.plot(slopheader, slopspain, label='Spain Growth Rate')
+    ax1.plot(slopheader, slopfrance, label='France Growth Rate')
+    plt.legend()
+    plt.yscale('log')
+    plt.grid()
+    ax1.title.set_text("Growth Slope")
+    
+    ax2=plt.subplot(122)
+    ax2.plot(header[-17:], korea[-17:], label='Korea')
+    ax2.plot(header[-17:], italy[-17:], label='Italy')
+    ax2.plot(header[-17:], germany[-17:], label='Germany')
+    ax2.plot(header[-17:], spain[-17:], label='Spain')
+    ax2.plot(header[-17:], france[-17:], label='France')
+    ax2.title.set_text("Number of Confirmed Case")
+    plt.legend()
+    plt.grid()
+    plt.yscale('log')
+
+    plt.show()
+
 if __name__ == "__main__":
-    date_data_for_checkbox()
+    plottimeserisedata()
     
